@@ -1,18 +1,27 @@
 <script setup>
 
-  import Box from './components/Box.vue'
+  // import Box from './components/Box.vue'
+  import MyButton from './components/MyButton.vue';
   import MyInput from './components/MyInput.vue'
-  import { ref } from 'vue'
+  import Child1 from './components/Child1.vue';
+  import { ref, watch, watchEffect, computed, provide } from 'vue'
+
+  import useMouse from "./composables/mouse"
+
+  const {x, y} = useMouse()
 
   const logoPath = "src/assets/logo.svg"
   let loadMessage = "Loaded site on " + new Date().toLocaleString()
 
-  const counter = ref(1)
+  const provideObject = {
+    message: "Hello from parent"
+  }
+  provide('parentObject', provideObject)
 
-  const textInput = ref("test")
+  const counter = ref(4)
+  const multiplikator = ref(2)
 
-  const amountBad = 3
-  const amountGood = 7
+  const textInput = ref("defineModel test")
 
   const colorGood = "#00CC00"
   const colorOK = "yellow"
@@ -28,50 +37,53 @@
     }
   }
 
-  function logBoxClick(count, name){
-    console.info(count)
-    console.info(name)
-    // console.info('Box #', count, ' was clicked')
-  }
+  watch(counter, (newCounter, oldCounter) => {
+      console.info("Counter changed from ", oldCounter, " to ", newCounter)
+  })
 
-  // function logBoxClick(count, name){
-  //   console.info(name)
-  //   console.info('Box #', count, ' was clicked')
-  // }
+  watchEffect(() => {
+    console.log("Watch Effect counter: ", counter.value)
+    console.log("Watch Effect TextInput: ", textInput.value)
+  })
+
+  watchEffect(() => {
+    console.log("Watch Effect2 counter: ", counter.value)
+  })
+
+  const multiCount = computed(() => {
+      return counter.value * multiplikator.value
+  })
+
+  function logBoxClick(count, color){
+    console.info('Box #', count, ' was clicked. Box has the color ', color)
+  }
 
 </script>
 
 <template>
   
-    {{  loadMessage }}
+    {{  loadMessage }} &nbsp;Mouse is at x:{{ x }} y:{{ y }}
     <img alt="Vue logo" class="logo" :src="logoPath" width="125" height="125" />
     
     <div id="wrapper">
-        <button @click="counter++">Add</button>&nbsp;
-        <button @click="counter > 0 ? counter-- : counter = 0">Reduce</button>
+
+        <MyButton @click="counter++"><i class="pi pi-plus" /> Add</MyButton>&nbsp;
+        <MyButton @click="counter > 0 ? counter-- : counter = 0"><i class="pi pi-minus" /> Reduce</MyButton>
 
         Counter: <span :class="getColor()">{{ counter }}</span>
+        x <input style="width: 30px" type="number" v-model="multiplikator" />
+        = <span :class="getColor()">{{ multiCount }}</span>
 
-        <!-- <span v-show="counter > 5">verkaufen</span> -->
-
-        <br /><br />
-        <input type="number" v-model="counter" />
-
+        
+        <p>Set Counter to <input style="width: 30px" type="number" v-model="counter" /></p>
 
         <div class="boxWrapper">
-          <Box v-for="count in counter" 
-          :count="count" 
-          @clicked="logBoxClick" />
+          <Box v-for="count in counter" :count="count" @clicked="logBoxClick" />
         </div>
-        <br /><br />
 
         <MyInput v-model="textInput" /> {{  textInput }}
 
-          <!-- <div class="box" >
-            <div v-if="count <= amountBad" class="boxFill bgRed"  />
-            <div v-else-if="count >= amountGood" class="boxFill bgGreen" />
-            <div v-else class="boxFill bgYellow" />
-          </div> -->
+        <Child1></Child1>
     </div>
     
 </template>
@@ -81,6 +93,7 @@
 .boxWrapper {
   display: flex;
   margin-top: 20px;
+  margin-bottom: 40px;
 }
 
 
